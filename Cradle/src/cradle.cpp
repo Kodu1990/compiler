@@ -7,7 +7,8 @@
 using namespace std;
 char look ;
 char tmp [MAX_BUF];
-void getChar(){
+void getChar()
+{
     look = cin.get();
 }
 
@@ -71,15 +72,16 @@ string getName(){
     return token;
 }
 
-string getNum(){
+int getNum(){
     
-    string value ="";
-    
+    int value =0;
+
     if(!isDigit(look)){
         Expected("Integer");
+        return -1;
     }
     while(isDigit(look)){
-        value = value +look;
+        value = 10* value +static_cast<int>(look)-'0';
         getChar();
     }
     SkipWhite();

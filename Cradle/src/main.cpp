@@ -13,46 +13,13 @@
 using namespace std;
 
 
-void Term();
-void Expression();
-void Add();
-void Substract();
-void Factor();
+int Term();
+int Expression();
+int Factor();
 char CR='\n';
 
-void Multiply()
-{
-    Match('*');
-    Factor();
-    EmitLn("imull (%esp), %eax");
-    /* push of the stack */
-    EmitLn("addl $4, %esp");
-} 
-
-void Divide()
-{
-    Match('/');
-    Factor();
-
-    /* for a expersion like a/b we have eax=b and %(esp)=a
-     * but we need eax=a, and b on the stack 
-     */
-    EmitLn("movl (%esp), %edx");
-    EmitLn("addl $4, %esp");
-
-    EmitLn("pushl %eax");
-
-    EmitLn("movl %edx, %eax");
-
-    /* sign extesnion */
-    EmitLn("sarl $31, %edx");
-    EmitLn("idivl (%esp)");
-    EmitLn("addl $4, %esp");
-
-}
 void Ident(){
-    // convert to string 
-    
+    // convert to string     
     string name =getName();
     
     if(look == '('){
@@ -65,75 +32,68 @@ void Ident(){
         EmitLn(s);
     }
 }
-void Factor()
+int Factor()
 {
-
-    if(look == '(') {
-
+    int val =0;
+    if(look == '(') 
+    {
         Match('(');
-        Expression();
+        val = Expression();
         Match(')');
-     } else if(isAddop(look)) {
-
-        Match('-');
-        cout << tmp << "movl $" <<getNum() <<" %%eax" <<endl;
-        
-        EmitLn(tmp);
-        EmitLn("negl %eax");
-       
-    } else if(isAlpha(look)){
-        Ident();
-    } else {
-
-        cout << tmp << "movl $" <<getNum() <<" %%eax" <<endl;
-        EmitLn(tmp);
+        return val;
+    } 
+    else 
+    {
+        return getNum();
     }
 }
 
-void Term()
+int Term()
 {
-    Factor();
-    while (strchr("*/", look)) {
-
-        EmitLn("pushl %eax");
-
+    int value =getNum();
+    while (strchr("*/", look)) 
+    {
         switch(look)
         {
             case '*':
-                Multiply();
+                value = value*getNum();
                 break;
             case '/':
-                Divide();
+                value = value/getNum();
                 break;
             default:
                 Expected("Mulop");
         }
     }
+    return value;
 }
 
-void Expression()
+int Expression()
 {
+    int val ;
     if(isAddop(look))
-        EmitLn("xor %eax, %eax");
+        val =0;
     else
-        Term();
+        val = getNum();
 
-    while (strchr("+-", look)) {
 
-        EmitLn("pushl %eax");
-
+    while (isAddop(look)) 
+    {
         switch(look)
         {
             case '+':
-                Add();
+                Match('+');
+                val = val + Term();
                 break;
             case '-':
-                Substract();
+                Match('-');
+                val = val - Term();
                 break;
             default:
                 Expected("Addop");
         }
     }
+    return val;
 }
 
 void Assignment()
@@ -145,24 +105,7 @@ void Assignment()
     EmitLn("movl %eax, %edx");
 }
 
-void Add()
-{
-    Match('+');
-    Term();
-    EmitLn("addl (%esp), %eax");
-    EmitLn("addl $4, %esp");
-    
-}
 
-
-void Substract()
-{
-    Match('-');
-    Term();
-    EmitLn("subl (%esp), %eax");
-    EmitLn("negl %eax");
-    EmitLn("addl $4, %esp");
-}
 
 
 int main()
@@ -170,10 +113,11 @@ int main()
     while(true)
     {
         init();
-        Assignment();
-        if(look != CR){
-            Expected("NewLine");
-        }
+        cout << Expression() <<CR;
+//        Assignment();
+//        if(look != CR){
+//            Expected("NewLine");
+//        }
     }
     return 0;
 }

@@ -26,7 +26,7 @@ bool isDigit(char c);
 bool isAddop(char c);
 bool isAlNum(char c);
 std::string getName();
-std::string getNum();
+int getNum();
 
 void Emit(std::string s);
 void EmitLn(std::string s);
